@@ -142,6 +142,4 @@ This is a hackathon prototype, so a few pieces are still stand-ins:
 - [ ] Persist prediction history server-side
 - [ ] Support crops beyond wheat
 
-## Team
 
-Built by the CropAI team for the TinkerCase Hackathon (IEEE), with contributions from Bhavansh Kapoor.
