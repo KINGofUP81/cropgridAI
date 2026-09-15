@@ -1,9 +1,12 @@
 # CropAI: Crop Infection Risk Prediction
 
-🏆 **1st Prize, TinkerCase Hackathon (IEEE)**
+ **SIH 2025 Project**
 
 CropAI is a machine-learning web app that predicts **crop infection risk** from field sensor readings, then recommends treatments and calculates dosage, helping farmers act *before* disease hits yield. The demo targets **wheat fields in Punjab, India**.
+---
 
+**WORKING PROTOTYPE VIDEO**
+https://drive.google.com/file/d/1xtdblWiC2YkrIsvF1Qsj_CaSLZIrFUVB/view?usp=drivesdk 
 ---
 
 ## Features
