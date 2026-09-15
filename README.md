@@ -145,4 +145,9 @@ This is a hackathon prototype, so a few pieces are still stand-ins:
 - [ ] Persist prediction history server-side
 - [ ] Support crops beyond wheat
 
+## Team
 
+| Name | Role |
+|---|---|
+| **Afraaz Khan** | Team lead |
+| **Bhavansh Kapoor** | Team member |
