@@ -1,90 +1,147 @@
-# CropAI — Crop Infection Prediction System
+# CropAI: Crop Infection Risk Prediction
 
-An ML-powered web platform that predicts crop infection risk from environmental and soil sensor data, helping farmers take preventive action before yield loss occurs.
+🏆 **1st Prize, TinkerCase Hackathon (IEEE)**
 
-🏆 **1st Prize — TinkerCase Hackathon, organized by IEEE**
+CropAI is a machine-learning web app that predicts **crop infection risk** from field sensor readings, then recommends treatments and calculates dosage, helping farmers act *before* disease hits yield. The demo targets **wheat fields in Punjab, India**.
 
 ---
 
-## Overview
-
-CropAI takes six field measurements — soil moisture, soil temperature, air temperature, air humidity, soil salinity, and NDVI (vegetation index) — and predicts an infection risk level on a scale of 1–10. Based on the predicted risk, it recommends suitable pesticides and lets users calculate exact dosage for their field size.
-
-Built and demoed for wheat fields in Punjab, India, using a synthetically generated but domain-informed dataset.
-
 ## Features
 
-- **Real-time prediction** — submit field readings and get an instant infection-risk score
-- **Visual risk gauge** — live needle gauge showing risk level (low / medium / high)
-- **Prediction history** — tracks past predictions with a trend chart
-- **Pesticide recommendations** — risk-tiered suggestions (Neem Oil, Sulfur Dust, Copper Fungicide, etc.)
-- **Dosage calculator** — scales pesticide quantity by field size (acres)
-- **Model performance dashboard** — accuracy, precision, recall, F1 score
+| | |
+|---|---|
+| 🔍 **Instant prediction** | Enter six field measurements and get an infection level from 1 to 10 |
+| 🎯 **Risk gauge** | Needle gauge with low / medium / high risk bands |
+| 📈 **History & trends** | Session history table with a Chart.js trend line |
+| 🧪 **Pesticide recommendations** | Treatments matched to the risk tier |
+| 🧮 **Dosage calculator** | Scales the recommended treatments to your field size in acres |
+| 📊 **Performance tab** | Model metrics dashboard |
+
+## Inputs
+
+| Feature | Unit | Typical range (training data) |
+|---|---|---|
+| Soil moisture | % | 10 – 60 |
+| Soil temperature | °C | 5 – 40 |
+| Air temperature | °C | 5 – 42 |
+| Air humidity | % | 30 – 95 |
+| Soil salinity | dS/m | 0 – 3 |
+| NDVI (vegetation index) | – | 0.2 – 0.9 |
+
+## Risk Tiers
+
+| Infection level | Risk | Recommended treatment |
+|---|---|---|
+| 1 – 3 | 🟢 Low | Neem Oil |
+| 4 – 6 | 🟡 Medium | Neem Oil, Sulfur Dust |
+| 7 – 10 | 🔴 High | Copper Fungicide, Potassium Bicarbonate, Mancozeb |
 
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
-| ML Model | XGBoost Classifier |
-| Data Processing | Pandas, NumPy, scikit-learn |
-| Backend | Flask, Flask-CORS |
-| Frontend | HTML, CSS, JavaScript, Chart.js |
+- **ML:** XGBoost, scikit-learn, pandas, NumPy
+- **Backend:** Flask, Flask-CORS
+- **Frontend:** HTML, CSS, vanilla JavaScript, Chart.js, Font Awesome
+
+## How It Works
+
+```
+Field readings ─► StandardScaler ─► XGBoost classifier ─► Level 1–10 ─► Risk tier ─► Treatments & dosage
+```
+
+1. **Dataset:** `scripts/dataset_for_sih.py` generates 5,000 synthetic wheat-field readings. Infection scores come from agronomy-informed rules (extreme soil moisture, temperature stress, humidity above 80 %, high salinity and low NDVI all raise risk) plus Gaussian noise. Scores are normalised to 1–10 and the classes are balanced to 500 samples each.
+2. **Training:** `scripts/sih_final_code.py` standardises the features, holds out a stratified 20 % test set and trains an `XGBClassifier` (700 trees, depth 7, learning rate 0.05). It reports exact accuracy and ±1-level accuracy, then saves `model/sih.json` and `model/scaler.pkl`.
+3. **Serving:** `app.py` loads the model and scaler and serves the UI and prediction API.
+
+`scripts/sih_classification.py` is an earlier experiment that treats the task as regression (`XGBRegressor`) and plots a confusion matrix of rounded predictions.
+
+## API
+
+### `POST /predict`
+
+```json
+{
+  "soil_moisture": 30.0,
+  "soil_temp": 22.0,
+  "air_temp": 26.0,
+  "air_humidity": 65.0,
+  "soil_salinity": 1.2,
+  "ndvi": 0.70
+}
+```
+
+Response:
+
+```json
+{
+  "infection_level": 4,
+  "risk_level": "medium",
+  "recommended_pesticides": ["Neem Oil", "Sulfur Dust"],
+  "confidence": 87.42
+}
+```
+
+### `POST /calculate_dosage`
+
+`{ "field_size": 2.5 }` returns per-pesticide totals for wheat, using per-hectare base rates.
+
+## Getting Started
+
+```bash
+git clone https://github.com/KINGofUP81/cropgridAI.git
+cd cropgridAI
+pip install -r requirements.txt
+
+# optional: regenerate the dataset and retrain
+python scripts/dataset_for_sih.py
+python scripts/sih_final_code.py
+
+python app.py
+```
+
+Open **http://127.0.0.1:5001**.
 
 ## Project Structure
 
 ```
-cropai/
-├── app.py                          # Flask server + prediction API
-├── model/
-│   ├── sih.json                    # trained XGBoost model
-│   └── scaler.pkl                  # fitted StandardScaler
-├── data/
-│   └── wheat_infection_punjab_5000.csv   # generated training dataset
-├── scripts/
-│   ├── dataset_for_sih.py          # synthetic dataset generator
-│   └── sih_final_code.py           # model training (final version)
-├── templates/
-│   └── index.html                  # frontend UI
-├── static/
-│   ├── css/style.css
-│   └── js/app.js
+cropgridAI/
+├── app.py                              # Flask server: UI + /predict + /calculate_dosage
 ├── requirements.txt
-└── README.md
+├── data/
+│   └── wheat_infection_punjab_5000.csv # synthetic training dataset
+├── model/
+│   ├── sih.json                        # trained XGBoost model
+│   └── scaler.pkl                      # fitted StandardScaler
+├── scripts/
+│   ├── dataset_for_sih.py              # dataset generator
+│   ├── sih_final_code.py               # final classifier training
+│   └── sih_classification.py           # earlier regression experiment
+├── templates/
+│   └── index.html
+└── static/
+    ├── css/style.css
+    └── js/app.js
 ```
 
-## How the Model Works
+## Current Limitations
 
-1. **Dataset generation** (`scripts/dataset_for_sih.py`) simulates 5,000 realistic field readings for wheat crops, with infection levels derived from domain-informed thresholds (e.g. extreme soil moisture, high humidity, low NDVI all raise infection risk), then balances the dataset across all 10 risk levels.
-2. **Model training** (`scripts/sih_final_code.py`) scales features with `StandardScaler` and trains an `XGBClassifier` (700 estimators, depth 7) to classify infection level (1–10).
-3. **Serving** (`app.py`) loads the saved model and scaler, exposes a `/predict` endpoint, and maps predictions to a risk tier and pesticide recommendation.
+This is a hackathon prototype, so a few pieces are still stand-ins:
 
-## Running Locally
+- **Synthetic data:** the model learns hand-written rules, not field observations, so its accuracy says nothing yet about real-world performance.
+- **Confidence score** is a placeholder random value, not the model's predicted probability.
+- **Performance tab** shows static example metrics rather than values computed from the test set.
+- **Dosage:** the UI calculates per acre in the browser, while `/calculate_dosage` uses per-hectare rates, and the two rate tables differ.
+- **History** lives in browser memory and is lost on refresh.
+- The frontend calls `http://127.0.0.1:5001` directly, so it only works when served locally.
 
-```bash
-# 1. Clone the repo
-git clone https://github.com/GITHUB_USERNAME/cropai.git
-cd cropai
+## Roadmap
 
-# 2. Install dependencies
-pip install -r requirements.txt
+- [ ] Train on real sensor and satellite (Sentinel-2 NDVI) data
+- [ ] Use calibrated `predict_proba` output as the confidence score
+- [ ] Compute metrics from the held-out set and serve them to the dashboard
+- [ ] Unify dosage logic in the backend with a unit selector
+- [ ] Persist prediction history server-side
+- [ ] Support crops beyond wheat
 
-# 3. (Optional) Regenerate dataset and retrain model
-python scripts/dataset_for_sih.py
-python scripts/sih_final_code.py
+## Team
 
-# 4. Run the Flask app
-python app.py
-```
-
-Then open `http://127.0.0.1:5001` in your browser.
-
-## Future Improvements
-
-- Replace synthetic dataset with real sensor/satellite data
-- Add support for crops beyond wheat
-- Persist prediction history server-side instead of in-browser memory
-- Replace placeholder confidence score with calibrated model probabilities
-
----
-
-Built by [Bhavansh Kapoor](https://github.com/GITHUB_USERNAME)
+Built by the CropAI team for the TinkerCase Hackathon (IEEE), with contributions from Bhavansh Kapoor.
